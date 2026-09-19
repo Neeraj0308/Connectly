@@ -13,6 +13,8 @@ const {
   updateReportStatus,
 } = require("../controllers/adminController");
 
+const { getAnalytics } = require("../controllers/adminAnalyticsController");
+
 const router = express.Router();
 
 router.get("/test", authMiddleware, adminMiddleware, (req, res) => {
@@ -61,5 +63,7 @@ router.patch(
   adminMiddleware,
   updateReportStatus,
 );
+
+router.get("/analytics", authMiddleware, adminMiddleware, getAnalytics);
 
 module.exports = router;
