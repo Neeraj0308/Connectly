@@ -4,6 +4,7 @@ const User = require("../models/User");
 const Profile = require("../models/Profile");
 const Report = require("../models/Report");
 
+//Get User By Admin
 const getUsers = async (req, res) => {
   try {
     const users = await User.find()
