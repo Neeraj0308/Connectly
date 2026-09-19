@@ -11,6 +11,7 @@ const {
   getReports,
   getReportById,
   updateReportStatus,
+  deleteUser,
 } = require("../controllers/adminController");
 
 const { getAnalytics } = require("../controllers/adminAnalyticsController");
@@ -63,6 +64,8 @@ router.patch(
   adminMiddleware,
   updateReportStatus,
 );
+
+router.delete("/users/:userId", authMiddleware, adminMiddleware, deleteUser);
 
 router.get("/analytics", authMiddleware, adminMiddleware, getAnalytics);
 

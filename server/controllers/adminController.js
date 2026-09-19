@@ -324,6 +324,103 @@ const updateReportStatus = async (req, res) => {
   }
 };
 
+const deleteUser = async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(userId)) {
+      return res.status(400).json({
+        message: "Invalid user ID",
+      });
+    }
+
+    const user = await User.findById(userId);
+
+    if (!user) {
+      return res.status(404).json({
+        message: "User not found",
+      });
+    }
+
+    if (String(user._id) === String(req.user._id)) {
+      return res.status(400).json({
+        message: "You cannot delete your own admin account",
+      });
+    }
+
+    if (user.role === "admin") {
+      return res.status(403).json({
+        message: "Admin accounts cannot be deleted",
+      });
+    }
+
+    await User.findByIdAndDelete(userId);
+
+    return res.status(200).json({
+      success: true,
+      message: "User deleted successfully",
+    });
+  } catch (error) {
+    console.error("ADMIN DELETE USER ERROR:", error);
+
+    return res.status(500).json({
+      message: "Unable to delete user",
+    });
+  }
+};
+
+const updateUserStatus = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const { isActive } = req.body;
+
+    if (!mongoose.Types.ObjectId.isValid(userId)) {
+      return res.status(400).json({
+        message: "Invalid user ID",
+      });
+    }
+
+    if (typeof isActive !== "boolean") {
+      return res.status(400).json({
+        message: "isActive must be a boolean",
+      });
+    }
+
+    const user = await User.findById(userId);
+
+    if (!user) {
+      return res.status(404).json({
+        message: "User not found",
+      });
+    }
+
+    if (user.role === "admin") {
+      return res.status(403).json({
+        message: "Admin accounts cannot be modified",
+      });
+    }
+
+    user.isActive = isActive;
+    await user.save();
+
+    return res.status(200).json({
+      success: true,
+      message: `User ${isActive ? "activated" : "deactivated"} successfully`,
+      user: {
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        isActive: user.isActive,
+      },
+    });
+  } catch (error) {
+    console.error("ADMIN UPDATE USER STATUS ERROR:", error);
+
+    return res.status(500).json({
+      message: "Unable to update user status",
+    });
+  }
+};
 module.exports = {
   getUsers,
   getUserById,
@@ -332,4 +429,6 @@ module.exports = {
   getReports,
   getReportById,
   updateReportStatus,
+  deleteUser,
+  updateUserStatus,
 };

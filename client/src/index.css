@@ -7481,3 +7481,33 @@ img {
     min-height: 240px;
   }
 }
+.admin-user-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.admin-danger-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: 10px;
+  padding: 11px 18px;
+  background: #c6284a;
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.admin-danger-button:hover {
+  opacity: 0.9;
+}
+
+.admin-danger-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
