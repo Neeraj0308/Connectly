@@ -4,17 +4,66 @@ const User = require("../models/User");
 const Profile = require("../models/Profile");
 const Report = require("../models/Report");
 
-//Get User By Admin
 const getUsers = async (req, res) => {
   try {
-    const users = await User.find()
-      .select("-password")
-      .sort({ createdAt: -1 })
-      .limit(100);
+    const {
+      search = "",
+      status = "all",
+      premium = "all",
+      page = 1,
+      limit = 20,
+    } = req.query;
+
+    const query = {};
+
+    if (search.trim()) {
+      const searchRegex = new RegExp(search.trim(), "i");
+
+      query.$or = [{ name: searchRegex }, { email: searchRegex }];
+    }
+
+    if (status === "active") {
+      query.isActive = true;
+    }
+
+    if (status === "inactive") {
+      query.isActive = false;
+    }
+
+    if (premium === "premium") {
+      query.isPremium = true;
+    }
+
+    if (premium === "free") {
+      query.isPremium = false;
+    }
+
+    const currentPage = Math.max(Number(page) || 1, 1);
+    const perPage = Math.min(Math.max(Number(limit) || 20, 1), 100);
+
+    const skip = (currentPage - 1) * perPage;
+
+    const [users, totalUsers] = await Promise.all([
+      User.find(query)
+        .select(
+          "name email dateOfBirth gender role isVerified isActive isPremium lastActiveAt createdAt",
+        )
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(perPage),
+
+      User.countDocuments(query),
+    ]);
 
     return res.status(200).json({
-      count: users.length,
+      success: true,
       users,
+      pagination: {
+        page: currentPage,
+        limit: perPage,
+        totalUsers,
+        totalPages: Math.ceil(totalUsers / perPage),
+      },
     });
   } catch (error) {
     console.error("ADMIN GET USERS ERROR:", error);
@@ -148,36 +197,39 @@ const activateUser = async (req, res) => {
 
 const getReports = async (req, res) => {
   try {
-    const { status } = req.query;
+    const { status = "all", page = 1, limit = 20 } = req.query;
 
-    const filter = {};
+    const query = {};
 
-    if (status) {
-      const allowedStatuses = ["pending", "reviewed", "resolved", "dismissed"];
-
-      if (!allowedStatuses.includes(status)) {
-        return res.status(400).json({
-          message: "Invalid report status",
-        });
-      }
-
-      filter.status = status;
+    if (["pending", "reviewed", "resolved", "dismissed"].includes(status)) {
+      query.status = status;
     }
 
-    const reports = await Report.find(filter)
-      .populate("reporter", "name email isActive")
-      .populate("reportedUser", "name email isActive")
-      .sort({ createdAt: -1 })
-      .limit(200);
+    const currentPage = Math.max(Number(page) || 1, 1);
+    const perPage = Math.min(Math.max(Number(limit) || 20, 1), 100);
 
-    const pendingCount = await Report.countDocuments({
-      status: "pending",
-    });
+    const skip = (currentPage - 1) * perPage;
+
+    const [reports, totalReports] = await Promise.all([
+      Report.find(query)
+        .populate("reporter", "name email isActive")
+        .populate("reportedUser", "name email isActive isPremium")
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(perPage),
+
+      Report.countDocuments(query),
+    ]);
 
     return res.status(200).json({
-      count: reports.length,
-      pendingCount,
+      success: true,
       reports,
+      pagination: {
+        page: currentPage,
+        limit: perPage,
+        totalReports,
+        totalPages: Math.ceil(totalReports / perPage),
+      },
     });
   } catch (error) {
     console.error("ADMIN GET REPORTS ERROR:", error);

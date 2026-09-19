@@ -6941,3 +6941,256 @@ img {
     grid-template-columns: 1fr;
   }
 }
+
+.admin-filters {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+
+.admin-search {
+  min-width: 280px;
+  flex: 1;
+  height: 42px;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 0 13px;
+  background: #fff;
+  border: 1px solid #e5e5ec;
+  border-radius: 10px;
+}
+
+.admin-search svg {
+  color: #999;
+  flex-shrink: 0;
+}
+
+.admin-search input {
+  width: 100%;
+  height: 100%;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  font-size: 14px;
+}
+
+.admin-filters select {
+  height: 42px;
+  padding: 0 35px 0 12px;
+  border: 1px solid #e5e5ec;
+  border-radius: 10px;
+  background: white;
+  color: #444;
+  outline: none;
+  cursor: pointer;
+}
+
+.admin-filter-reset {
+  height: 42px;
+  padding: 0 15px;
+  border: 1px solid #e5e5ec;
+  border-radius: 10px;
+  background: white;
+  color: #666;
+  cursor: pointer;
+}
+
+.admin-filter-reset:hover {
+  border-color: #ff4f81;
+  color: #ff4f81;
+}
+
+.admin-result-count {
+  color: #888;
+  font-size: 13px;
+}
+
+.admin-free-status {
+  display: inline-flex;
+  align-items: center;
+  padding: 5px 9px;
+  border-radius: 20px;
+  background: #f3f3f7;
+  color: #777;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.admin-report-card {
+  padding: 20px;
+  background: white;
+  border: 1px solid #ececf2;
+  border-radius: 16px;
+  margin-bottom: 14px;
+}
+
+.admin-report-card-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 15px;
+}
+
+.admin-report-card-top > div:first-child {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.admin-report-icon {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border-radius: 10px;
+  background: #fff0f3;
+  color: #ff3f76;
+}
+
+.admin-report-card h3 {
+  margin: 0;
+  font-size: 16px;
+}
+
+.admin-report-card h3 a {
+  color: #252536;
+  text-decoration: none;
+}
+
+.admin-report-card h3 a:hover {
+  color: #ff3f76;
+}
+
+.admin-report-card p {
+  margin: 5px 0 0;
+  color: #999;
+  font-size: 12px;
+}
+
+.admin-report-users {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 18px;
+}
+
+.admin-report-users > div {
+  padding: 13px;
+  background: #fafafd;
+  border-radius: 10px;
+}
+
+.admin-report-users span {
+  display: block;
+  margin-bottom: 5px;
+  color: #999;
+  font-size: 11px;
+}
+
+.admin-report-users strong {
+  display: block;
+  font-size: 13px;
+}
+
+.admin-report-users small {
+  display: block;
+  margin-top: 3px;
+  color: #888;
+}
+
+.admin-report-description {
+  margin-top: 12px;
+  padding: 13px;
+  background: #fafafd;
+  border-radius: 10px;
+  color: #555;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.admin-report-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.admin-report-actions button,
+.admin-report-actions a {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  text-decoration: none;
+}
+
+.admin-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  padding: 20px 0 5px;
+}
+
+.admin-pagination button {
+  padding: 9px 15px;
+  border: 1px solid #e4e4eb;
+  border-radius: 9px;
+  background: white;
+  color: #444;
+  cursor: pointer;
+}
+
+.admin-pagination button:hover:not(:disabled) {
+  border-color: #ff4f81;
+  color: #ff4f81;
+}
+
+.admin-pagination button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.admin-pagination span {
+  min-width: 100px;
+  text-align: center;
+  color: #777;
+  font-size: 13px;
+}
+
+.admin-spin {
+  animation: adminSpin 0.8s linear infinite;
+}
+
+@keyframes adminSpin {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (max-width: 750px) {
+  .admin-search {
+    min-width: 100%;
+  }
+
+  .admin-filters select,
+  .admin-filter-reset {
+    flex: 1;
+  }
+
+  .admin-report-card-top {
+    flex-direction: column;
+  }
+
+  .admin-report-users {
+    grid-template-columns: 1fr;
+  }
+}
