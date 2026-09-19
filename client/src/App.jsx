@@ -17,6 +17,7 @@ import Premium from "./pages/Premium";
 import WhoLikedMe from "./pages/WhoLikedMe";
 import Notifications from "./pages/Notifications";
 import AppLayout from "./components/AppLayout";
+import AdminDashboard from "./pages/AdminDashboard";
 
 function App() {
   return (
@@ -140,6 +141,16 @@ function App() {
                   <Notifications />
                 </AppLayout>
               </ProfileRequiredRoute>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin"
+          element={
+            <ProtectedRoute>
+              <AppLayout>
+                <AdminDashboard />
+              </AppLayout>
             </ProtectedRoute>
           }
         />

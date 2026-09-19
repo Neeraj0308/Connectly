@@ -1,6 +1,14 @@
 import { Link, useNavigate } from "react-router-dom";
-import { Heart, MessageCircle, User, LogOut, Crown } from "lucide-react";
-import { Bell } from "lucide-react";
+import {
+  Heart,
+  MessageCircle,
+  User,
+  LogOut,
+  Crown,
+  Bell,
+  Shield,
+} from "lucide-react";
+
 const AppLayout = ({ children }) => {
   const navigate = useNavigate();
 
@@ -36,12 +44,16 @@ const AppLayout = ({ children }) => {
             <Crown size={18} />
             Premium
           </Link>
+
           <Link to="/who-liked-me">
             <Heart size={18} />
             Who liked me
           </Link>
 
-          <Link to="/notifications" className="notification-nav-link">
+          <Link
+            to="/notifications"
+            className="notification-nav-link"
+          >
             <Bell size={18} />
             Notifications
           </Link>
@@ -51,13 +63,24 @@ const AppLayout = ({ children }) => {
             Profile
           </Link>
 
+          {user?.role === "admin" && (
+            <Link to="/admin">
+              <Shield size={18} />
+              Admin
+            </Link>
+          )}
+
           <button onClick={logout} className="logout-button">
             <LogOut size={18} />
             Logout
           </button>
         </nav>
 
-        {user && <div className="nav-user">Hi, {user.name}</div>}
+        {user && (
+          <div className="nav-user">
+            Hi, {user.name}
+          </div>
+        )}
       </header>
 
       <main>{children}</main>
