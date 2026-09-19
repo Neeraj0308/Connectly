@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import { useEffect, useState } from "react";
 import {
   Users,
@@ -6,6 +7,7 @@ import {
   UserX,
   ShieldAlert,
   RefreshCw,
+  Eye,
 } from "lucide-react";
 import api from "../api/axios";
 
@@ -237,29 +239,40 @@ const AdminDashboard = () => {
                     </td>
 
                     <td>{user.isPremium ? "Premium" : "Free"}</td>
-
                     <td>
-                      {user.role === "admin" ? (
-                        <span className="admin-protected">Protected</span>
-                      ) : (
+                      <div className="admin-user-actions">
                         <button
-                          className={
-                            user.isActive
-                              ? "admin-action-danger"
-                              : "admin-action-success"
-                          }
-                          disabled={actionLoading === user._id}
+                          className="admin-action-secondary"
                           onClick={() =>
-                            changeUserStatus(user._id, user.isActive)
+                            (window.location.href = `/admin/users/${user._id}`)
                           }
                         >
-                          {actionLoading === user._id
-                            ? "Updating..."
-                            : user.isActive
-                              ? "Deactivate"
-                              : "Activate"}
+                          <Eye size={14} />
+                          View
                         </button>
-                      )}
+
+                        {user.role === "admin" ? (
+                          <span className="admin-protected">Protected</span>
+                        ) : (
+                          <button
+                            className={
+                              user.isActive
+                                ? "admin-action-danger"
+                                : "admin-action-success"
+                            }
+                            disabled={actionLoading === user._id}
+                            onClick={() =>
+                              changeUserStatus(user._id, user.isActive)
+                            }
+                          >
+                            {actionLoading === user._id
+                              ? "Updating..."
+                              : user.isActive
+                                ? "Deactivate"
+                                : "Activate"}
+                          </button>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -293,9 +306,14 @@ const AdminDashboard = () => {
 
                   <div>
                     <h3>
-                      {report.reason
-                        ?.replaceAll("_", " ")
-                        ?.replace(/\b\w/g, (char) => char.toUpperCase())}
+                      <Link
+                        to={`/admin/reports/${report._id}`}
+                        className="admin-report-link"
+                      >
+                        {report.reason
+                          ?.replaceAll("_", " ")
+                          ?.replace(/\b\w/g, (char) => char.toUpperCase())}
+                      </Link>
                     </h3>
 
                     <p>

@@ -18,6 +18,8 @@ import WhoLikedMe from "./pages/WhoLikedMe";
 import Notifications from "./pages/Notifications";
 import AppLayout from "./components/AppLayout";
 import AdminDashboard from "./pages/AdminDashboard";
+import AdminUserDetails from "./pages/AdminUserDetails";
+import AdminReportDetails from "./pages/AdminReportDetails";
 
 function App() {
   return (
@@ -150,6 +152,28 @@ function App() {
             <ProtectedRoute>
               <AppLayout>
                 <AdminDashboard />
+              </AppLayout>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/admin/users/:userId"
+          element={
+            <ProtectedRoute>
+              <AppLayout>
+                <AdminUserDetails />
+              </AppLayout>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/admin/reports/:reportId"
+          element={
+            <ProtectedRoute>
+              <AppLayout>
+                <AdminReportDetails />
               </AppLayout>
             </ProtectedRoute>
           }
