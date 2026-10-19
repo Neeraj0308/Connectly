@@ -5,7 +5,31 @@ const helmet = require("helmet");
 const cookieParser = require("cookie-parser");
 const rateLimit = require("express-rate-limit");
 const http = require("http");
+const path = require("path");
 const { Server } = require("socket.io");
+
+dotenv.config();
+
+const clientOrigins = new Set();
+for (const configuredUrl of (process.env.CLIENT_URL || "").split(",")) {
+  const value = configuredUrl.trim();
+  if (!value) continue;
+
+  const url = new URL(value);
+  if (url.protocol !== "http:" && url.protocol !== "https:") {
+    throw new Error(`CLIENT_URL must use http or https: ${value}`);
+  }
+
+  clientOrigins.add(url.origin);
+  if (url.hostname === "localhost" || url.hostname === "127.0.0.1") {
+    url.hostname = url.hostname === "localhost" ? "127.0.0.1" : "localhost";
+    clientOrigins.add(url.origin);
+  }
+}
+const corsOptions = {
+  origin: [...clientOrigins],
+  credentials: true,
+};
 
 const connectDB = require("./config/db");
 
@@ -18,8 +42,7 @@ const paymentRoutes = require("./routes/paymentRoutes");
 const notificationRoutes = require("./routes/notificationRoutes");
 const safetyRoutes = require("./routes/safetyRoutes");
 const adminRoutes = require("./routes/adminRoutes");
-
-dotenv.config();
+const uploadRoutes = require("./routes/uploadRoutes");
 
 connectDB();
 
@@ -29,22 +52,22 @@ const httpServer = http.createServer(app);
 
 const io = new Server(httpServer, {
   cors: {
-    origin: process.env.CLIENT_URL,
+    ...corsOptions,
     methods: ["GET", "POST"],
-    credentials: true,
   },
 });
 
 app.set("io", io);
 
+app.use(cors(corsOptions));
+
 app.use(
-  cors({
-    origin: process.env.CLIENT_URL,
-    credentials: true,
+  helmet({
+    crossOriginResourcePolicy: {
+      policy: "cross-origin",
+    },
   }),
 );
-
-app.use(helmet());
 
 app.use(
   express.json({
@@ -59,6 +82,8 @@ app.use(
 );
 
 app.use(cookieParser());
+
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 const apiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
@@ -78,6 +103,7 @@ app.use("/api/payments", paymentRoutes);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api/safety", safetyRoutes);
 app.use("/api/admin", adminRoutes);
+app.use("/api/upload", uploadRoutes);
 
 app.get("/api/health", (req, res) => {
   return res.status(200).json({
@@ -94,6 +120,18 @@ app.use((req, res) => {
 
 app.use((error, req, res, next) => {
   console.error("SERVER ERROR:", error);
+
+  if (error.code === "LIMIT_FILE_SIZE") {
+    return res.status(400).json({
+      message: "Profile photo must be smaller than 5MB",
+    });
+  }
+
+  if (error.message === "Only JPG, PNG, and WEBP images are allowed") {
+    return res.status(400).json({
+      message: error.message,
+    });
+  }
 
   return res.status(500).json({
     message: "Internal server error",

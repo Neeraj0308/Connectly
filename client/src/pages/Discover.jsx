@@ -8,32 +8,46 @@ import {
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
-import { Link } from "react-router-dom";
 import api from "../api/axios";
+
+const API_ORIGIN = import.meta.env.VITE_API_ORIGIN || "http://localhost:5000";
+
+const getImageUrl = (imagePath) => {
+  if (!imagePath) {
+    return "";
+  }
+
+  if (imagePath.startsWith("http://") || imagePath.startsWith("https://")) {
+    return imagePath;
+  }
+
+  if (imagePath.startsWith("/")) {
+    return `${API_ORIGIN}${imagePath}`;
+  }
+
+  return `${API_ORIGIN}/${imagePath}`;
+};
 
 const Discover = () => {
   const [profiles, setProfiles] = useState([]);
-
   const [loading, setLoading] = useState(true);
-
   const [message, setMessage] = useState("");
-
   const [currentPhoto, setCurrentPhoto] = useState(0);
-
   const [showMatch, setShowMatch] = useState(false);
-
   const [matchedProfile, setMatchedProfile] = useState(null);
   const [likeStatus, setLikeStatus] = useState(null);
 
   const loadProfiles = async () => {
     try {
       setLoading(true);
+      setMessage("");
 
       const response = await api.get("/interactions/discover");
 
       setProfiles(response.data.profiles || []);
+      setCurrentPhoto(0);
     } catch (error) {
-      console.error(error);
+      console.error("DISCOVER LOAD ERROR:", error);
 
       setMessage(error.response?.data?.message || "Unable to load profiles");
     } finally {
@@ -41,24 +55,25 @@ const Discover = () => {
     }
   };
 
+  const loadLikeStatus = async () => {
+    try {
+      const response = await api.get("/interactions/like-status");
+
+      setLikeStatus(response.data);
+    } catch (error) {
+      console.error("LIKE STATUS ERROR:", error);
+    }
+  };
+
   useEffect(() => {
     loadProfiles();
-    const loadLikeStatus = async () => {
-      try {
-        const response = await api.get("/interactions/like-status");
-
-        setLikeStatus(response.data);
-      } catch (error) {
-        console.error(error);
-      }
-    };
+    loadLikeStatus();
   }, []);
 
   const currentProfile = profiles[0];
 
   const removeCurrentProfile = () => {
     setProfiles((current) => current.slice(1));
-
     setCurrentPhoto(0);
   };
 
@@ -72,25 +87,36 @@ const Discover = () => {
 
       if (action === "like" && response.data.matched) {
         setMatchedProfile(currentProfile);
-
         setShowMatch(true);
       }
 
       removeCurrentProfile();
+
+      if (action === "like") {
+        loadLikeStatus();
+      }
     } catch (error) {
-      console.error(error);
+      console.error("DISCOVER ACTION ERROR:", error);
 
       setMessage(error.response?.data?.message || "Something went wrong");
     }
   };
 
-  const nextPhoto = () => {
-    if (!currentProfile) return;
+  const getCurrentPhotos = () => {
+    if (!currentProfile) {
+      return [];
+    }
 
-    const photos = [
-      currentProfile.profile.profilePhoto,
-      ...(currentProfile.profile.photos || []),
-    ].filter(Boolean);
+    return [
+      currentProfile.profile?.profilePhoto,
+      ...(currentProfile.profile?.photos || []),
+    ]
+      .filter(Boolean)
+      .map(getImageUrl);
+  };
+
+  const nextPhoto = () => {
+    const photos = getCurrentPhotos();
 
     if (photos.length === 0) return;
 
@@ -98,12 +124,7 @@ const Discover = () => {
   };
 
   const previousPhoto = () => {
-    if (!currentProfile) return;
-
-    const photos = [
-      currentProfile.profile.profilePhoto,
-      ...(currentProfile.profile.photos || []),
-    ].filter(Boolean);
+    const photos = getCurrentPhotos();
 
     if (photos.length === 0) return;
 
@@ -135,11 +156,7 @@ const Discover = () => {
     );
   }
 
-  const photos = [
-    currentProfile.profile.profilePhoto,
-    ...(currentProfile.profile.photos || []),
-  ].filter(Boolean);
-
+  const photos = getCurrentPhotos();
   const photo = photos[currentPhoto] || null;
 
   return (
@@ -163,7 +180,13 @@ const Discover = () => {
           <div className="profile-card">
             <div className="profile-image">
               {photo ? (
-                <img src={photo} alt={currentProfile.user.name} />
+                <img
+                  src={photo}
+                  alt={currentProfile.user.name}
+                  onError={(event) => {
+                    event.currentTarget.style.display = "none";
+                  }}
+                />
               ) : (
                 <div className="no-photo">
                   <UserPlaceholder />
@@ -172,12 +195,20 @@ const Discover = () => {
 
               {photos.length > 1 && (
                 <>
-                  <button className="photo-button left" onClick={previousPhoto}>
-                    <ChevronLeft />
+                  <button
+                    type="button"
+                    className="photo-button left"
+                    onClick={previousPhoto}
+                  >
+                    <ChevronLeft size={24} />
                   </button>
 
-                  <button className="photo-button right" onClick={nextPhoto}>
-                    <ChevronRight />
+                  <button
+                    type="button"
+                    className="photo-button right"
+                    onClick={nextPhoto}
+                  >
+                    <ChevronRight size={24} />
                   </button>
 
                   <div className="photo-indicators">
@@ -242,6 +273,7 @@ const Discover = () => {
               )}
             </div>
           </div>
+
           <div className="discover-action-buttons">
             <button
               type="button"
@@ -267,7 +299,7 @@ const Discover = () => {
                 fill="#ffffff"
               />
             </button>
-          </div>{" "}
+          </div>
         </div>
       </div>
 

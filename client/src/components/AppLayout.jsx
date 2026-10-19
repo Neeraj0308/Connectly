@@ -50,10 +50,7 @@ const AppLayout = ({ children }) => {
             Who liked me
           </Link>
 
-          <Link
-            to="/notifications"
-            className="notification-nav-link"
-          >
+          <Link to="/notifications" className="notification-nav-link">
             <Bell size={18} />
             Notifications
           </Link>
@@ -76,11 +73,7 @@ const AppLayout = ({ children }) => {
           </button>
         </nav>
 
-        {user && (
-          <div className="nav-user">
-            Hi, {user.name}
-          </div>
-        )}
+        {user && <div className="nav-user">Hi, {user.name}</div>}
       </header>
 
       <main>{children}</main>

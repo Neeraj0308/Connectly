@@ -227,13 +227,16 @@ const AdminDashboard = () => {
     try {
       setActionLoading(`user-${userId}`);
 
-      await api.patch(`/admin/users/${userId}/status`, {
-        isActive,
-      });
+      const endpoint = isActive
+        ? `/admin/users/${userId}/activate`
+        : `/admin/users/${userId}/deactivate`;
+
+      await api.patch(endpoint);
 
       await Promise.all([loadUsers(), loadAnalytics()]);
     } catch (error) {
       console.error("UPDATE USER STATUS ERROR:", error);
+
       alert(error.response?.data?.message || "Unable to update user status");
     } finally {
       setActionLoading("");

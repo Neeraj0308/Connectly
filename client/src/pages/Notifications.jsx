@@ -39,8 +39,8 @@ const Notifications = () => {
         current.map((notification) =>
           notification._id === id
             ? { ...notification, isRead: true }
-            : notification
-        )
+            : notification,
+        ),
       );
     } catch (error) {
       console.error("MARK NOTIFICATION READ ERROR:", error);
@@ -57,7 +57,7 @@ const Notifications = () => {
         current.map((notification) => ({
           ...notification,
           isRead: true,
-        }))
+        })),
       );
     } catch (error) {
       console.error("MARK ALL READ ERROR:", error);
@@ -71,7 +71,7 @@ const Notifications = () => {
       await api.delete(`/notifications/${id}`);
 
       setNotifications((current) =>
-        current.filter((notification) => notification._id !== id)
+        current.filter((notification) => notification._id !== id),
       );
     } catch (error) {
       console.error("DELETE NOTIFICATION ERROR:", error);
@@ -107,7 +107,7 @@ const Notifications = () => {
   };
 
   const unreadCount = notifications.filter(
-    (notification) => !notification.isRead
+    (notification) => !notification.isRead,
   ).length;
 
   if (loading) {
@@ -127,9 +127,7 @@ const Notifications = () => {
           <h1>
             Notifications
             {unreadCount > 0 && (
-              <span className="notification-count">
-                {unreadCount}
-              </span>
+              <span className="notification-count">{unreadCount}</span>
             )}
           </h1>
 
@@ -157,10 +155,7 @@ const Notifications = () => {
 
           <h2>No notifications yet</h2>
 
-          <p>
-            When someone likes you or you get a match,
-            you'll see it here.
-          </p>
+          <p>When someone likes you or you get a match, you'll see it here.</p>
 
           <Link to="/discover" className="primary-button">
             Discover people
@@ -192,15 +187,11 @@ const Notifications = () => {
                   <p>{notification.message}</p>
 
                   <span className="notification-time">
-                    {new Date(
-                      notification.createdAt
-                    ).toLocaleString()}
+                    {new Date(notification.createdAt).toLocaleString()}
                   </span>
                 </div>
 
-                {!notification.isRead && (
-                  <div className="unread-dot" />
-                )}
+                {!notification.isRead && <div className="unread-dot" />}
 
                 <button
                   className="delete-notification"
@@ -228,11 +219,7 @@ const Notifications = () => {
               );
             }
 
-            return (
-              <div key={notification._id}>
-                {notificationContent}
-              </div>
-            );
+            return <div key={notification._id}>{notificationContent}</div>;
           })}
         </div>
       )}

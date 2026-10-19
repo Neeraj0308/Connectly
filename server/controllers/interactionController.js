@@ -9,7 +9,6 @@ const Block = require("../models/Block");
 const { checkLikeLimit } = require("../utils/likeLimit");
 const createNotification = require("../utils/createNotification");
 
-
 const calculateAge = (dateOfBirth) => {
   const today = new Date();
   const birthDate = new Date(dateOfBirth);
@@ -94,16 +93,11 @@ const discoverProfiles = async (req, res) => {
       blockedUserIds.add(block.blockedUser.toString());
     });
 
-    // Remove current user from blocked list if present.
     blockedUserIds.delete(currentUser._id.toString());
 
     const blockedObjectIds = Array.from(blockedUserIds)
       .filter((id) => mongoose.Types.ObjectId.isValid(id))
       .map((id) => new mongoose.Types.ObjectId(id));
-
-    // =========================================================
-    // GET USERS WITHIN AGE RANGE
-    // =========================================================
 
     const users = await User.find({
       _id: {
@@ -121,19 +115,11 @@ const discoverProfiles = async (req, res) => {
 
     const userIds = users.map((user) => user._id);
 
-    // =========================================================
-    // GET PROFILES
-    // =========================================================
-
     const profiles = await Profile.find({
       user: {
         $in: userIds,
       },
     });
-
-    // =========================================================
-    // GET PEOPLE ALREADY INTERACTED WITH
-    // =========================================================
 
     const interactions = await Interaction.find({
       sender: currentUser._id,
@@ -146,10 +132,6 @@ const discoverProfiles = async (req, res) => {
       interactions.map((interaction) => interaction.receiver.toString()),
     );
 
-    // =========================================================
-    // CREATE PROFILE MAP
-    // =========================================================
-
     const profileMap = new Map();
 
     profiles.forEach((profile) => {
@@ -161,14 +143,17 @@ const discoverProfiles = async (req, res) => {
 
     const results = [];
 
-    // =========================================================
-    // BUILD DISCOVERY RESULTS
-    // =========================================================
+    let oppositeGender = null;
+
+    if (currentGender === "male") {
+      oppositeGender = "female";
+    } else if (currentGender === "female") {
+      oppositeGender = "male";
+    }
 
     for (const user of users) {
       const userId = user._id.toString();
 
-      // Extra safety check.
       if (blockedUserIds.has(userId)) {
         continue;
       }
@@ -183,9 +168,9 @@ const discoverProfiles = async (req, res) => {
         continue;
       }
 
-      // =========================================================
-      // CURRENT USER'S GENDER PREFERENCE
-      // =========================================================
+      if (oppositeGender && user.gender !== oppositeGender) {
+        continue;
+      }
 
       const preferredGender = currentProfile.preferences?.gender;
 
@@ -196,10 +181,6 @@ const discoverProfiles = async (req, res) => {
       ) {
         continue;
       }
-
-      // =========================================================
-      // TARGET USER'S PREFERENCES
-      // =========================================================
 
       const targetPreferences = profile.preferences || {};
 
@@ -219,19 +200,17 @@ const discoverProfiles = async (req, res) => {
         continue;
       }
 
-      // =========================================================
-      // COMPATIBILITY SCORE
-      // =========================================================
-
       let score = 0;
 
       const currentInterests = currentProfile.interests || [];
       const targetInterests = profile.interests || [];
 
+      const targetInterestNames = targetInterests.map((item) =>
+        item.toLowerCase(),
+      );
+
       const commonInterests = currentInterests.filter((interest) =>
-        targetInterests
-          .map((item) => item.toLowerCase())
-          .includes(interest.toLowerCase()),
+        targetInterestNames.includes(interest.toLowerCase()),
       );
 
       score += commonInterests.length * 10;
@@ -243,20 +222,12 @@ const discoverProfiles = async (req, res) => {
         score += 20;
       }
 
-      // =========================================================
-      // ACTIVE WITHIN LAST 24 HOURS
-      // =========================================================
-
       if (
         user.lastActiveAt &&
         Date.now() - new Date(user.lastActiveAt).getTime() < 24 * 60 * 60 * 1000
       ) {
         score += 10;
       }
-
-      // =========================================================
-      // RESULT
-      // =========================================================
 
       results.push({
         user: {
@@ -301,11 +272,6 @@ const discoverProfiles = async (req, res) => {
   }
 };
 
-// =========================================================
-// LIKE USER
-// POST /api/interactions/:userId/like
-// =========================================================
-
 const likeUser = async (req, res) => {
   try {
     const senderId = req.user._id;
@@ -323,10 +289,6 @@ const likeUser = async (req, res) => {
       });
     }
 
-    // =========================================================
-    // BLOCK CHECK
-    // =========================================================
-
     const blocked = await areUsersBlocked(senderId, receiverId);
 
     if (blocked) {
@@ -334,10 +296,6 @@ const likeUser = async (req, res) => {
         message: "You cannot interact with this user",
       });
     }
-
-    // =========================================================
-    // CHECK DAILY LIKE LIMIT
-    // =========================================================
 
     const likeStatus = await checkLikeLimit(req.user._id);
 
@@ -351,10 +309,6 @@ const likeUser = async (req, res) => {
       });
     }
 
-    // =========================================================
-    // FIND RECEIVER
-    // =========================================================
-
     const receiver = await User.findOne({
       _id: receiverId,
       isActive: true,
@@ -366,10 +320,6 @@ const likeUser = async (req, res) => {
       });
     }
 
-    // =========================================================
-    // CHECK BLOCK AGAIN
-    // =========================================================
-
     const blockedAfterUserCheck = await areUsersBlocked(senderId, receiverId);
 
     if (blockedAfterUserCheck) {
@@ -377,10 +327,6 @@ const likeUser = async (req, res) => {
         message: "You cannot interact with this user",
       });
     }
-
-    // =========================================================
-    // CHECK DUPLICATE INTERACTION
-    // =========================================================
 
     const existingInteraction = await Interaction.findOne({
       sender: senderId,
@@ -393,10 +339,6 @@ const likeUser = async (req, res) => {
       });
     }
 
-    // =========================================================
-    // CREATE LIKE
-    // =========================================================
-
     await Interaction.create({
       sender: senderId,
       receiver: receiverId,
@@ -404,10 +346,6 @@ const likeUser = async (req, res) => {
     });
 
     const io = req.app.get("io");
-
-    // =========================================================
-    // LIKE NOTIFICATION
-    // =========================================================
 
     await createNotification({
       recipient: receiverId,
@@ -418,10 +356,6 @@ const likeUser = async (req, res) => {
       io,
     });
 
-    // =========================================================
-    // CHECK MUTUAL LIKE
-    // =========================================================
-
     const mutualLike = await Interaction.findOne({
       sender: receiverId,
       receiver: senderId,
@@ -431,7 +365,6 @@ const likeUser = async (req, res) => {
     });
 
     if (mutualLike) {
-      // Final block protection before creating a match.
       const blockedBeforeMatch = await areUsersBlocked(senderId, receiverId);
 
       if (blockedBeforeMatch) {
@@ -462,10 +395,6 @@ const likeUser = async (req, res) => {
           setDefaultsOnInsert: true,
         },
       );
-
-      // =========================================================
-      // MATCH NOTIFICATIONS
-      // =========================================================
 
       await createNotification({
         recipient: senderId,
@@ -507,11 +436,6 @@ const likeUser = async (req, res) => {
   }
 };
 
-// =========================================================
-// GET LIKE STATUS
-// GET /api/interactions/like-status
-// =========================================================
-
 const getLikeStatus = async (req, res) => {
   try {
     const status = await checkLikeLimit(req.user._id);
@@ -525,11 +449,6 @@ const getLikeStatus = async (req, res) => {
     });
   }
 };
-
-// =========================================================
-// PASS USER
-// POST /api/interactions/:userId/pass
-// =========================================================
 
 const passUser = async (req, res) => {
   try {
@@ -547,10 +466,6 @@ const passUser = async (req, res) => {
         message: "Invalid user",
       });
     }
-
-    // =========================================================
-    // BLOCK CHECK
-    // =========================================================
 
     const blocked = await areUsersBlocked(senderId, receiverId);
 
@@ -570,10 +485,6 @@ const passUser = async (req, res) => {
         message: "User not found",
       });
     }
-
-    // =========================================================
-    // CHECK DUPLICATE INTERACTION
-    // =========================================================
 
     const existingInteraction = await Interaction.findOne({
       sender: senderId,
@@ -604,11 +515,6 @@ const passUser = async (req, res) => {
   }
 };
 
-// =========================================================
-// WHO LIKED ME
-// GET /api/interactions/who-liked-me
-// =========================================================
-
 const getWhoLikedMe = async (req, res) => {
   try {
     const likes = await Interaction.find({
@@ -628,10 +534,6 @@ const getWhoLikedMe = async (req, res) => {
       if (!interaction.sender) {
         continue;
       }
-
-      // =========================================================
-      // BLOCK CHECK
-      // =========================================================
 
       const blocked = await areUsersBlocked(
         req.user._id,
@@ -654,13 +556,9 @@ const getWhoLikedMe = async (req, res) => {
 
       results.push({
         interactionId: interaction._id,
-
         type: interaction.type,
-
         likedAt: interaction.createdAt,
-
         user: interaction.sender,
-
         profile,
       });
     }
@@ -676,10 +574,6 @@ const getWhoLikedMe = async (req, res) => {
     });
   }
 };
-
-// =========================================================
-// EXPORTS
-// =========================================================
 
 module.exports = {
   discoverProfiles,

@@ -46,9 +46,7 @@ const Chat = () => {
         setLoading(true);
         setError("");
 
-
         const response = await api.get(`/chat/${matchId}/messages`);
-
 
         setMessages(response.data.messages || []);
 
@@ -78,7 +76,6 @@ const Chat = () => {
       return;
     }
 
-
     const socket = io(SOCKET_URL, {
       withCredentials: true,
     });
@@ -90,7 +87,6 @@ const Chat = () => {
     // -------------------------------------------------------
 
     socket.on("connect", () => {
-     
       socket.emit("join_match", matchId);
     });
 
@@ -99,7 +95,6 @@ const Chat = () => {
     // -------------------------------------------------------
 
     socket.on("new_message", (newMessage) => {
-
       if (!newMessage) {
         return;
       }
@@ -140,7 +135,6 @@ const Chat = () => {
     // -------------------------------------------------------
 
     return () => {
-
       socket.emit("leave_match", matchId);
 
       socket.disconnect();
@@ -176,15 +170,11 @@ const Chat = () => {
       setSending(true);
       setError("");
 
-
       const response = await api.post(`/chat/${matchId}/messages`, {
         text,
       });
 
-
       const newMessage = response.data.message;
-
-    
 
       if (newMessage) {
         setMessages((previousMessages) => {

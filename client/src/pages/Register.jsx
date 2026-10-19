@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import {
   Heart,
@@ -9,146 +9,72 @@ import {
   Users,
   ArrowRight,
   ShieldCheck,
+  Camera,
 } from "lucide-react";
 import api from "../api/axios";
+import { uploadRegistrationPhoto } from "../api/cloudinary";
 
 const getMaxDateFor18 = () => {
-  const today = new Date();
-
-  const maxDate = new Date(
-    today.getFullYear() - 18,
-    today.getMonth(),
-    today.getDate(),
-  );
-
-  const year = maxDate.getFullYear();
-  const month = String(maxDate.getMonth() + 1).padStart(2, "0");
-  const day = String(maxDate.getDate()).padStart(2, "0");
-
-  return `${year}-${month}-${day}`;
-};
-
-const calculateAge = (dateOfBirth) => {
-  if (!dateOfBirth) return 0;
-
-  const today = new Date();
-  const birthDate = new Date(`${dateOfBirth}T00:00:00`);
-
-  if (Number.isNaN(birthDate.getTime())) {
-    return 0;
-  }
-
-  let age = today.getFullYear() - birthDate.getFullYear();
-
-  const monthDifference = today.getMonth() - birthDate.getMonth();
-
-  if (
-    monthDifference < 0 ||
-    (monthDifference === 0 && today.getDate() < birthDate.getDate())
-  ) {
-    age--;
-  }
-
-  return age;
+  const date = new Date();
+  date.setFullYear(date.getFullYear() - 18);
+  return date.toISOString().slice(0, 10);
 };
 
 const Register = () => {
   const navigate = useNavigate();
-
-  const [formData, setFormData] = useState({
+  const [form, setForm] = useState({
     name: "",
     email: "",
     password: "",
     dateOfBirth: "",
     gender: "",
   });
-
+  const [photo, setPhoto] = useState(null);
+  const [preview, setPreview] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const maxDate = getMaxDateFor18();
+  useEffect(() => () => preview && URL.revokeObjectURL(preview), [preview]);
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-
-    setFormData((current) => ({
+  const change = (event) => {
+    setForm((current) => ({
       ...current,
-      [name]: value,
+      [event.target.name]: event.target.value,
     }));
-
-    if (name === "dateOfBirth") {
-      setError("");
-    }
+    setError("");
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-
+  const selectPhoto = (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    if (!["image/jpeg", "image/png", "image/webp"].includes(file.type))
+      return setError("Only JPG, PNG and WEBP images are allowed.");
+    if (file.size > 5 * 1024 * 1024)
+      return setError("Profile photo must be smaller than 5MB.");
+    setPhoto(file);
+    setPreview(URL.createObjectURL(file));
     setError("");
+  };
 
-    if (
-      !formData.name.trim() ||
-      !formData.email.trim() ||
-      !formData.password ||
-      !formData.dateOfBirth ||
-      !formData.gender
-    ) {
-      setError("Please fill in all fields.");
-      return;
-    }
-
-    /* ================================
-       AGE VALIDATION
-    ================================= */
-
-    const age = calculateAge(formData.dateOfBirth);
-
-    if (age < 18) {
-      setError("You must be at least 18 years old to join Connectly.");
-      return;
-    }
-
-    /* Prevent future DOB */
-    const selectedDate = new Date(`${formData.dateOfBirth}T00:00:00`);
-
-    const today = new Date();
-
-    if (selectedDate > today) {
-      setError("Please enter a valid date of birth.");
-      return;
-    }
-
-    /* ================================
-       REGISTER
-    ================================= */
+  const submit = async (event) => {
+    event.preventDefault();
+    setError("");
+    if (!photo) return setError("A profile photo is required.");
+    if (form.password.length < 8)
+      return setError("Password must be at least 8 characters.");
 
     try {
       setLoading(true);
-
-      const response = await api.post("/auth/register", {
-        name: formData.name.trim(),
-        email: formData.email.trim().toLowerCase(),
-        password: formData.password,
-        dateOfBirth: formData.dateOfBirth,
-        gender: formData.gender,
-      });
-
-      const { token, user } = response.data;
-
-      localStorage.setItem("token", token);
-
-      localStorage.setItem("user", JSON.stringify(user));
-
-      /* New users MUST complete profile */
-
-      navigate("/profile/setup", {
-        replace: true,
+      const { data } = await api.post("/auth/register", form);
+      const uploadedPhoto = await uploadRegistrationPhoto(photo);
+      navigate("/verify-registration", {
+        state: { email: data.email, photo: uploadedPhoto, preview },
       });
     } catch (err) {
-      console.error("REGISTRATION ERROR:", err);
-
       setError(
-        err.response?.data?.message || "Registration failed. Please try again.",
+        err.response?.data?.message ||
+          err.message ||
+          "Unable to start registration.",
       );
     } finally {
       setLoading(false);
@@ -157,21 +83,15 @@ const Register = () => {
 
   return (
     <div className="auth-page">
-      {/* LEFT SIDE */}
-
       <div className="auth-brand-side">
         <Link to="/" className="auth-logo">
           <Heart size={28} fill="currentColor" />
-
           <span>Connectly</span>
         </Link>
-
         <div className="auth-brand-content">
           <div className="auth-small-badge">
-            <Heart size={14} fill="currentColor" />
-            Find meaningful connections
+            <Heart size={14} fill="currentColor" /> Find meaningful connections
           </div>
-
           <h1>
             Your next
             <br />
@@ -179,188 +99,154 @@ const Register = () => {
             <br />
             starts here.
           </h1>
-
           <p>
             Create your profile, discover interesting people, and start building
             genuine connections.
           </p>
         </div>
-
         <div className="auth-brand-bottom">
           <ShieldCheck size={17} />
-
           <span>Your privacy matters to us.</span>
         </div>
       </div>
 
-      {/* RIGHT SIDE */}
-
       <div className="auth-form-side">
         <div className="auth-form-container">
           <div className="auth-mobile-logo">
-            <Heart size={25} fill="currentColor" />
-            Connectly
+            <Heart size={25} fill="currentColor" /> Connectly
           </div>
-
           <div className="auth-heading">
             <span className="auth-eyebrow">GET STARTED</span>
-
             <h2>Create your account</h2>
-
-            <p>
-              Join Connectly and start meeting people who share your interests.
-            </p>
+            <p>Verify your email before your Connectly account is created.</p>
           </div>
-
           {error && <div className="auth-error">{error}</div>}
 
-          <form className="auth-form" onSubmit={handleSubmit}>
-            {/* NAME */}
-
+          <form className="auth-form" onSubmit={submit}>
             <div className="auth-field">
               <label htmlFor="name">Your name</label>
-
               <div className="auth-input-wrapper">
                 <User size={18} />
-
                 <input
                   id="name"
-                  type="text"
                   name="name"
+                  value={form.name}
+                  onChange={change}
                   placeholder="Enter your name"
-                  value={formData.name}
-                  onChange={handleChange}
-                  autoComplete="name"
                   required
                 />
               </div>
             </div>
-
-            {/* EMAIL */}
-
             <div className="auth-field">
               <label htmlFor="email">Email address</label>
-
               <div className="auth-input-wrapper">
                 <Mail size={18} />
-
                 <input
                   id="email"
                   type="email"
                   name="email"
-                  placeholder="you@example.com"
-                  value={formData.email}
-                  onChange={handleChange}
-                  autoComplete="email"
+                  value={form.email}
+                  onChange={change}
+                  placeholder="you@gmail.com"
                   required
                 />
               </div>
             </div>
-
-            {/* PASSWORD */}
-
             <div className="auth-field">
               <label htmlFor="password">Password</label>
-
               <div className="auth-input-wrapper">
                 <Lock size={18} />
-
                 <input
                   id="password"
                   type="password"
                   name="password"
+                  value={form.password}
+                  onChange={change}
                   placeholder="At least 8 characters"
-                  value={formData.password}
-                  onChange={handleChange}
-                  autoComplete="new-password"
                   minLength={8}
                   required
                 />
               </div>
             </div>
-
-            {/* DOB + GENDER */}
-
             <div className="auth-two-columns">
               <div className="auth-field">
                 <label htmlFor="dateOfBirth">Date of birth</label>
-
                 <div className="auth-input-wrapper">
                   <Calendar size={18} />
-
                   <input
                     id="dateOfBirth"
                     type="date"
                     name="dateOfBirth"
-                    value={formData.dateOfBirth}
-                    onChange={handleChange}
-                    max={maxDate}
+                    value={form.dateOfBirth}
+                    onChange={change}
+                    max={getMaxDateFor18()}
                     required
                   />
                 </div>
               </div>
-
               <div className="auth-field">
                 <label htmlFor="gender">Gender</label>
-
                 <div className="auth-input-wrapper">
                   <Users size={18} />
-
                   <select
                     id="gender"
                     name="gender"
-                    value={formData.gender}
-                    onChange={handleChange}
+                    value={form.gender}
+                    onChange={change}
                     required
                   >
                     <option value="">Select gender</option>
-
                     <option value="male">Male</option>
-
                     <option value="female">Female</option>
-
                     <option value="non_binary">Non-binary</option>
-
                     <option value="other">Other</option>
                   </select>
                 </div>
               </div>
             </div>
-
-            {/* AGE NOTICE */}
-
-            <div className="auth-info">
-              <ShieldCheck size={17} />
-
-              <p>
-                Connectly is for people aged 18 and above. You must be at least
-                18 years old to create an account.
-              </p>
+            <div className="auth-field">
+              <label>Profile photo</label>
+              <label htmlFor="registerPhoto" className="register-photo-upload">
+                {preview ? (
+                  <div className="register-photo-preview">
+                    <img src={preview} alt="Preview" />
+                    <div className="register-photo-overlay">
+                      <Camera size={22} />
+                      <span>Change photo</span>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="register-photo-empty">
+                    <Camera size={28} />
+                    <strong>Add your profile photo</strong>
+                    <span>JPG, PNG or WEBP · Max 5MB</span>
+                  </div>
+                )}
+              </label>
+              <input
+                id="registerPhoto"
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                onChange={selectPhoto}
+                hidden
+              />
             </div>
-
-            {/* BUTTON */}
-
             <button
-              type="submit"
               className="auth-submit-button"
+              type="submit"
               disabled={loading}
             >
               {loading ? (
-                "Creating account..."
+                "Sending code..."
               ) : (
                 <>
-                  Create account
-                  <ArrowRight size={18} />
+                  Continue to email verification <ArrowRight size={18} />
                 </>
               )}
             </button>
           </form>
-
-          {/* LOGIN */}
-
           <div className="auth-switch">
             <span>Already have an account?</span>
-
             <Link to="/login">Log in</Link>
           </div>
         </div>

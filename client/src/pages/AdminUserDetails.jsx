@@ -35,9 +35,7 @@ const AdminUserDetails = () => {
     } catch (error) {
       console.error("ADMIN USER DETAILS ERROR:", error);
 
-      setError(
-        error.response?.data?.message || "Unable to load user",
-      );
+      setError(error.response?.data?.message || "Unable to load user");
     } finally {
       setLoading(false);
     }
@@ -55,23 +53,16 @@ const AdminUserDetails = () => {
       setError("");
 
       if (user.isActive) {
-        await api.patch(
-          `/admin/users/${user._id}/deactivate`,
-        );
+        await api.patch(`/admin/users/${user._id}/deactivate`);
       } else {
-        await api.patch(
-          `/admin/users/${user._id}/activate`,
-        );
+        await api.patch(`/admin/users/${user._id}/activate`);
       }
 
       await loadUser();
     } catch (error) {
       console.error("ADMIN USER STATUS ERROR:", error);
 
-      setError(
-        error.response?.data?.message ||
-          "Unable to update user status",
-      );
+      setError(error.response?.data?.message || "Unable to update user status");
     } finally {
       setActionLoading(false);
     }
@@ -98,10 +89,7 @@ const AdminUserDetails = () => {
     } catch (error) {
       console.error("DELETE USER ERROR:", error);
 
-      setError(
-        error.response?.data?.message ||
-          "Unable to delete user",
-      );
+      setError(error.response?.data?.message || "Unable to delete user");
     } finally {
       setDeleteLoading(false);
     }
@@ -130,10 +118,7 @@ const AdminUserDetails = () => {
   return (
     <div className="admin-user-page">
       <div className="admin-user-topbar">
-        <Link
-          to="/admin"
-          className="admin-back-button"
-        >
+        <Link to="/admin" className="admin-back-button">
           <ArrowLeft size={18} />
           Back to Admin
         </Link>
@@ -150,9 +135,7 @@ const AdminUserDetails = () => {
               <h1>{user.name}</h1>
 
               {user.role === "admin" && (
-                <span className="admin-role admin-role-admin">
-                  Admin
-                </span>
+                <span className="admin-role admin-role-admin">Admin</span>
               )}
             </div>
 
@@ -180,13 +163,9 @@ const AdminUserDetails = () => {
               <button
                 type="button"
                 className={
-                  user.isActive
-                    ? "admin-action-danger"
-                    : "admin-action-success"
+                  user.isActive ? "admin-action-danger" : "admin-action-success"
                 }
-                disabled={
-                  actionLoading || deleteLoading
-                }
+                disabled={actionLoading || deleteLoading}
                 onClick={changeStatus}
               >
                 {actionLoading
@@ -199,14 +178,10 @@ const AdminUserDetails = () => {
               <button
                 type="button"
                 className="admin-danger-button"
-                disabled={
-                  actionLoading || deleteLoading
-                }
+                disabled={actionLoading || deleteLoading}
                 onClick={handleDeleteUser}
               >
-                {deleteLoading
-                  ? "Deleting..."
-                  : "Delete User"}
+                {deleteLoading ? "Deleting..." : "Delete User"}
               </button>
             </div>
           )}
@@ -218,9 +193,7 @@ const AdminUserDetails = () => {
 
             <div>
               <span>Gender</span>
-              <strong>
-                {user.gender || "Not provided"}
-              </strong>
+              <strong>{user.gender || "Not provided"}</strong>
             </div>
           </div>
 
@@ -232,9 +205,7 @@ const AdminUserDetails = () => {
 
               <strong>
                 {user.dateOfBirth
-                  ? new Date(
-                      user.dateOfBirth,
-                    ).toLocaleDateString()
+                  ? new Date(user.dateOfBirth).toLocaleDateString()
                   : "Not provided"}
               </strong>
             </div>
@@ -246,9 +217,7 @@ const AdminUserDetails = () => {
             <div>
               <span>Verified</span>
 
-              <strong>
-                {user.isVerified ? "Yes" : "No"}
-              </strong>
+              <strong>{user.isVerified ? "Yes" : "No"}</strong>
             </div>
           </div>
 
@@ -260,9 +229,7 @@ const AdminUserDetails = () => {
 
               <strong>
                 {user.createdAt
-                  ? new Date(
-                      user.createdAt,
-                    ).toLocaleDateString()
+                  ? new Date(user.createdAt).toLocaleDateString()
                   : "Not provided"}
               </strong>
             </div>
@@ -273,9 +240,7 @@ const AdminUserDetails = () => {
       <div className="admin-user-profile-card">
         <div className="admin-section-header">
           <div>
-            <span className="eyebrow">
-              PROFILE
-            </span>
+            <span className="eyebrow">PROFILE</span>
 
             <h2>Profile Information</h2>
           </div>
@@ -285,9 +250,7 @@ const AdminUserDetails = () => {
           <div className="admin-empty">
             <User size={35} />
 
-            <p>
-              This user has not completed a profile.
-            </p>
+            <p>This user has not completed a profile.</p>
           </div>
         ) : (
           <div className="admin-profile-details">
@@ -297,10 +260,7 @@ const AdminUserDetails = () => {
               <div>
                 <span>Bio</span>
 
-                <p>
-                  {profile.bio ||
-                    "No bio provided"}
-                </p>
+                <p>{profile.bio || "No bio provided"}</p>
               </div>
             </div>
 
@@ -310,10 +270,7 @@ const AdminUserDetails = () => {
               <div>
                 <span>City</span>
 
-                <p>
-                  {profile.city ||
-                    "Not provided"}
-                </p>
+                <p>{profile.city || "Not provided"}</p>
               </div>
             </div>
 
@@ -323,10 +280,7 @@ const AdminUserDetails = () => {
               <div>
                 <span>Profession</span>
 
-                <p>
-                  {profile.profession ||
-                    "Not provided"}
-                </p>
+                <p>{profile.profession || "Not provided"}</p>
               </div>
             </div>
 
@@ -336,10 +290,7 @@ const AdminUserDetails = () => {
               <div>
                 <span>Education</span>
 
-                <p>
-                  {profile.education ||
-                    "Not provided"}
-                </p>
+                <p>{profile.education || "Not provided"}</p>
               </div>
             </div>
 
@@ -349,10 +300,7 @@ const AdminUserDetails = () => {
               <div>
                 <span>Relationship Goal</span>
 
-                <p>
-                  {profile.relationshipGoal ||
-                    "Not provided"}
-                </p>
+                <p>{profile.relationshipGoal || "Not provided"}</p>
               </div>
             </div>
 

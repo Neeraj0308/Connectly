@@ -8,6 +8,8 @@ import ProfileRequiredRoute from "./components/ProfileRequiredRoute";
 import Home from "./pages/Home";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
+import VerifyRegistration from "./pages/VerifyRegistration";
+import ForgotPassword from "./pages/ForgotPassword";
 import ProfileSetup from "./pages/ProfileSetup";
 import Dashboard from "./pages/Dashboard";
 import Discover from "./pages/Discover";
@@ -30,6 +32,8 @@ function App() {
         <Route path="/login" element={<Login />} />
 
         <Route path="/register" element={<Register />} />
+        <Route path="/verify-registration" element={<VerifyRegistration />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
 
         <Route
           path="/profile/setup"
