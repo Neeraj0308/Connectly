@@ -1,19 +1,6 @@
 const sendOtpEmail = async ({ to, otp, purpose }) => {
   const isDevelopment = process.env.NODE_ENV !== "production";
 
-  // Local development: no domain, SMTP, or Resend email is required.
-  // Print the OTP in the backend terminal so registration/password reset can be tested.
-  if (isDevelopment) {
-    console.log("\n========================================");
-    console.log("CONNECTLY DEVELOPMENT OTP");
-    console.log(`Purpose: ${purpose}`);
-    console.log(`Email: ${to}`);
-    console.log(`OTP: ${otp}`);
-    console.log("Expires in: 10 minutes");
-    console.log("========================================\n");
-    return;
-  }
-
   if (!process.env.RESEND_API_KEY || !process.env.MAIL_FROM) {
     throw new Error("RESEND_API_KEY and MAIL_FROM are required in production");
   }
